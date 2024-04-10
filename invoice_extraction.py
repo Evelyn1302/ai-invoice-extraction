@@ -16,7 +16,7 @@ How To Use Script:
     2. Run script.
     
 
-Last Edit: 21/03/2024
+Last Edit: 10/04/2024
 
 """
 
@@ -118,9 +118,22 @@ def generate_text_from_image(model, pixel_values, processor, device):
 
 
 def filter_function(pair):
+    # Uncomment this section if using model Sebabrata/dof-invoice-1
     wanted_keys = ["supplier_name", "supplier_address", "receiver_name", "receiver_address",
-                   "invoice_id", "invoice_date",
+                   "invoice_id", "invoice_date", "due_date", "payment_terms",
                    "tax_amount", "sub_total", "total"]
+    """
+    # Uncomment this section if using model AdamCodd/donut-receipts-extract
+    wanted_keys = ["store_name", "store_addr",
+                   "date",
+                   "tax", "subtotal", "total"]
+    """
+    """
+    # Uncomment this section if using model mychen76/invoice-and-receipts_donut_v1 OR selvakumarcts/sk_invoice_receipts
+    wanted_keys = ["seller", "seller_tax_id", "store_name", "store_addr", "client", "client_tax_id",
+                   "invoice_no", "invoice_date", "date",
+                   "tax", "total_vat", "subtotal", "total"]
+    """
     key, value = pair
     
     if key not in wanted_keys:
@@ -149,9 +162,9 @@ def merge_outputs(output_list):
 
 
 def log_text(extracted_text, file_name):
-    file_name = file_name.strip(".pdf")
-    file_name = file_name.strip(".png")
-    file_name = file_name.strip(".jpg")
+    file_name = file_name.rstrip(".pdf")
+    file_name = file_name.rstrip(".png")
+    file_name = file_name.rstrip(".jpg")
     output_file_name = input_invoice_folder + "\\" + output_text_folder + "\\" + file_name + ".txt"
     
     with open(output_file_name, "w", encoding="utf-8") as outfile:
@@ -161,8 +174,7 @@ def log_text(extracted_text, file_name):
     print(file_name + " extracted.")
 
 
-def move_processed_file(source_path, destination_folder, file_name):
-    file_name = file_name.strip(input_invoice_folder)
+def move_file(source_path, destination_folder, file_name):
     destination_path = input_invoice_folder + "\\" + destination_folder + "\\" + file_name
     os.rename(source_path, destination_path)
 
@@ -172,15 +184,15 @@ def extract_invoice(invoice_folder):
     create_folder(output_text_folder)
     create_folder(converted_invoice_folder)
     
+    total_extracted = 0
     file_list = os.listdir(invoice_folder)
     
-    for i in range(len(file_list)):
-        file_path = invoice_folder + "\\" + file_list[i]
+    for i in file_list:
+        print(file_list)
+        file_path = invoice_folder + "\\" + i
         image_list = convert_pdf(file_path)
         
-        if len(image_list) == 0 and i == 0:
-            raise Exception("No files of suitable types to be extracted. Please make sure the input file type is either .pdf, .png, .jpeg or .jpg")
-        elif len(image_list) == 0 and i != 0:
+        if len(image_list) == 0:
             pass
         else:
             extracted_list = []
@@ -197,14 +209,25 @@ def extract_invoice(invoice_folder):
                     raise Exception("Extracted text is not either of dictionary or list types.")
                     
                 extracted_list.append(extracted_text)
-                move_processed_file(j, converted_invoice_folder, j)
             
             final_extracted_text = merge_outputs(extracted_list)
-            log_text(final_extracted_text, file_list[i])
-            
-            move_processed_file(file_path, processed_invoice_folder, file_list[i])
+            log_text(final_extracted_text, i)
+            move_file(file_path, processed_invoice_folder, i)
+            total_extracted += 1
+    
+    new_file_list = os.listdir(invoice_folder)
+    
+    for i in new_file_list:
+        new_file_path = invoice_folder + "\\" + i
         
-    print("Extraction completed. Please head to " + input_invoice_folder + "\\" + output_text_folder + " for the extracted text files.")
+        if new_file_path.endswith(".jpg") or new_file_path.endswith(".jpeg") or new_file_path.endswith(".png"):
+            move_file(new_file_path, converted_invoice_folder, i)
+        else:
+            pass
+        
+    print("\n")
+    print("Extraction completed. Total " + str(total_extracted) + " file(s) extracted.")
+    print("Please head to " + input_invoice_folder + "\\" + output_text_folder + " for the extracted text files.")
 # ========================================
 
 
