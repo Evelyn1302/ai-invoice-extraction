@@ -56,8 +56,8 @@ wip_folder_path = os.path.join(temporary_folder_path, temporary_storage_folder_n
 converted_invoice_folder_path = os.path.join(temporary_folder_path, converted_invoice_folder_name)  # folder to temporarily store converted images
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")                             # use cuda if available, else cpu
-processor = DonutProcessor.from_pretrained(r".\models\01_dof-invoice-1")                            # select processor from "models" folder
-model = VisionEncoderDecoderModel.from_pretrained(r".\models\01_dof-invoice-1")                     # select VisionEncoderDecoderModel from "models" folder
+processor = DonutProcessor.from_pretrained(r".\Models\dof-invoice-1")                            # select processor from "Model" folder
+model = VisionEncoderDecoderModel.from_pretrained(r".\Models\dof-invoice-1")                     # select VisionEncoderDecoderModel from "Model" folder
 model.to(device)                                                                                    # link model to device
 # ========================================
 
@@ -324,7 +324,7 @@ def extract_and_log(img_list, file_root, file_name):
 # ========================================
 # Main Function
 
-def extract_invoice(folder_path):
+def extract_invoice():
     check_main_folders()
     create_folder(wip_folder_path)
     create_folder(converted_invoice_folder_path)
@@ -363,5 +363,5 @@ def extract_invoice(folder_path):
 # ========================================
 # Execution
 
-extract_invoice(base_folder_path)
+extract_invoice()
 # ========================================
